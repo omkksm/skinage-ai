@@ -1,0 +1,13 @@
+sample,group,노화점수_LOOCV,예측
+Y1,young,0.088,young
+Y2,young,0.048,young
+Y3,young,0.072,young
+Y4,young,0.073,young
+Y5,young,0.079,young
+Y6,young,0.074,young
+A1,aged,0.916,aged
+A2,aged,0.904,aged
+A3,aged,0.942,aged
+A4,aged,0.927,aged
+A5,aged,0.937,aged
+A6,aged,0.9,aged

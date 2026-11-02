@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkinAge-AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* 레이아웃: 상단 모듈 탭(AI 예측 · 전사체 · Wet-lab · 색소 · 소개), 각 모듈은 좌측 조건 패널 + 우측 하위 탭 */
+:root{
+  --bg:#f1f5f4; --card:#ffffff; --ink:#132320; --sub:#5b6e6a; --line:#d9e3e0; --grid:#e8eeec;
+  --accent:#0f766e; --accent-2:#4b5bab; --accent-soft:#dff1ee; --good:#15803d; --warn:#b45309; --err:#b91c1c;
+  --up:#c8463d; --down:#2f6db5; --ns:#b8c2bf; --base:#b4bebb;
+  --f-display:"IBM Plex Sans KR","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1716;--card:#15211f;--ink:#e4efec;--sub:#98aca7;--line:#26413c;--grid:#1f322f;--accent:#3fc1b0;--accent-2:#93a2ec;--accent-soft:#16312d;--good:#4ade80;--warn:#f0b35a;--err:#f87171;--up:#f07a70;--down:#6fa3e8;--ns:#4c5c59;--base:#5d6c69;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1716;--card:#15211f;--ink:#e4efec;--sub:#98aca7;--line:#26413c;--grid:#1f322f;--accent:#3fc1b0;--accent-2:#93a2ec;--accent-soft:#16312d;--good:#4ade80;--warn:#f0b35a;--err:#f87171;--up:#f07a70;--down:#6fa3e8;--ns:#4c5c59;--base:#5d6c69;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.55}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0 0 8px;text-wrap:balance}
+h3{font-size:15px}h4{font-size:12.5px;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 18px}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:19px;margin:0}.brand small{display:block;color:var(--sub);font-size:12px;font-family:var(--f-body);font-weight:400}
+.mods{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.mods button{border:1px solid var(--line);background:var(--bg);padding:7px 13px;border-radius:8px;cursor:pointer;font-weight:500}
+.mods button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+main{padding:18px 0 50px}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.split{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.ctrl{position:sticky;top:70px;display:grid;gap:4px}
+.ctrl label{font-size:12.5px;color:var(--sub);margin-top:8px}
+.ctrl label b{color:var(--ink)}
+.ctrl select,.ctrl input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg)}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.radio{display:flex;gap:6px;align-items:center;color:var(--ink)!important;font-size:13.5px!important;margin-top:4px!important;cursor:pointer}
+.seg{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.seg button{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:5px 6px;cursor:pointer;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+.hint{color:var(--sub);font-size:12.5px;margin:6px 0}
+.subtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.subtabs button{border:0;border-bottom:2px solid transparent;background:none;padding:6px 10px;cursor:pointer;color:var(--sub);font-weight:500}
+.subtabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.kpi span{display:block;font-size:12px;color:var(--sub)}.kpi b{font-family:var(--f-mono);font-size:21px;font-weight:500}
+.kpi b.good,.good{color:var(--good)}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;align-items:start}
+.grid2>div{min-width:0}
+.callout{background:var(--accent-soft);border-left:4px solid var(--accent);padding:10px 14px;border-radius:8px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin:6px 0}
+.btn{display:inline-block;border:1px solid var(--line);background:var(--card);padding:7px 13px;border-radius:8px;cursor:pointer;font-weight:500;font-size:13px}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ctrl .btn{display:block;text-align:center;margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left}
+th{color:var(--sub);font-weight:500;font-size:12px}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tblwrap{overflow-x:auto;max-height:520px;overflow-y:auto}
+svg.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--sub);font-size:11px;font-family:var(--f-body)}
+.chart text.lab{fill:var(--ink);font-size:11.5px}.chart text.sm{font-size:10px}.chart text.pv{fill:var(--good);font-size:11px;font-weight:700}
+.chart .b-base{fill:var(--base)}.chart .b-main{fill:var(--accent)}
+.chart .r-base{fill:var(--base);fill-opacity:.25;stroke:var(--sub);stroke-width:1.5}.chart .r-main{fill:var(--accent);fill-opacity:.3;stroke:var(--accent);stroke-width:2}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.loading{color:var(--sub)}.err{color:var(--err)}.ok{color:var(--good)}
+code{font-family:var(--f-mono);font-size:12.5px;background:var(--bg);padding:1px 5px;border-radius:4px}
+iframe.mod{width:100%;height:calc(100vh - 120px);min-height:720px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.about table td{vertical-align:top}
+footer{color:var(--sub);font-size:12px;border-top:1px solid var(--line);padding:14px 0 30px}
+@media (max-width:980px){.split,.grid2{grid-template-columns:1fr}.ctrl{position:static}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <div class="brand"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="var(--accent)" stroke-width="2.4"/><path d="M8 20 C12 12, 15 22, 18 13 S 23 9, 25 12" fill="none" stroke="var(--accent-2)" stroke-width="2.2" stroke-linecap="round"/><circle cx="25" cy="12" r="2.4" fill="var(--accent)"/></svg>
+    <div><h1>SkinAge-AI</h1><small>피부노화·아토피 피부염 예방효과 정량예측 AI 플랫폼 · 개발 문경미</small></div></div>
+  <nav class="mods" role="tablist" aria-label="모듈">
+    <button role="tab" data-mod="ai" aria-selected="true">🤖 AI 예측</button>
+    <button role="tab" data-mod="omics" aria-selected="false">🧬 SkinAge-Omics</button>
+    <button role="tab" data-mod="proto" aria-selected="false">🧫 ProtoLab</button>
+    <button role="tab" data-mod="pig" aria-selected="false">🎨 PigmentLab</button>
+    <button role="tab" data-mod="about" aria-selected="false">ⓘ 소개</button>
+  </nav>
+</div></header>
+<main class="wrap">
+  <section class="view on" id="v-ai"></section>
+  <section class="view" id="v-omics"></section>
+  <section class="view" id="v-proto"><iframe class="mod" title="SkinCell ProtoLab" data-src="modules/skincell_protolab.html"></iframe></section>
+  <section class="view" id="v-pig"><iframe class="mod" title="PigmentLab" data-src="modules/pigmentlab.html"></iframe></section>
+  <section class="view about" id="v-about">
+    <div class="card"><h2>SkinAge-AI · 피부 질환 예방효과 정량예측 AI 플랫폼</h2>
+      <p><b>목표</b>: 피부노화·아토피 피부염 개체(세포·마우스·인체)에서 <b>환경·스트레스와 후보물질 처리</b>에 따른 <b>기전지표 · 질환 지수 · 예방효과</b>를 AI로 정량 예측합니다.</p>
+      <table><thead><tr><th>모듈</th><th>역할</th><th>주요 기능</th></tr></thead><tbody>
+      <tr><td>🤖 AI 예측</td><td><b>예측 엔진 (핵심)</b></td><td>조건 입력 → 16개 기전지표 변화와 95% 예측구간, 질환 지수, 예방률, 용량-반응·권장 농도, 후보물질 순위, 교차검증·중요도, 실험·문헌(PMID) 데이터 반영 재학습, 전사체 기전 역전 점수</td></tr>
+      <tr><td>🧬 SkinAge-Omics</td><td>기전 발굴 (Dry-lab)</td><td>RNA-seq DEG(NB-Wald), 피부노화 유전자 패널 70개, GO·KEGG·Hallmark ORA, 기존 분석과의 비교</td></tr>
+      <tr><td>🧫 SkinCell ProtoLab</td><td>데이터 생산 (Wet-lab)</td><td>피부세포 노화모델 15단계 프로토콜, 계산기 10종, 실험실 구축·운영 플래너</td></tr>
+      <tr><td>🎨 PigmentLab</td><td>효능 정량</td><td>멜라닌 정량, 티로시나제·IC₅₀(4PL), k-means AI 이미지 색소 분석</td></tr></tbody></table>
+      <p><b>순환 구조</b>: ProtoLab·PigmentLab에서 표준화된 실험 데이터 생산 → 데이터 허브로 학습 → AI가 다음 실험 조건(물질·농도·시점) 추천 → SkinAge-Omics로 기전 확인</p>
+      <p><b>질환 · 요인 · 지표</b><br>피부노화: 광노화(UV) · 산화스트레스 · 당화/내인성 노화 → MMP-1, 콜라겐, p16, SA-β-gal, IL-6, ROS, 멜라닌, 주름, 탄력, 표피 두께<br>아토피 피부염: 알레르겐·햅텐(DNCB·HDM·MC903) · 장벽 손상 · 산화스트레스 → TSLP, IL-4·IL-13, IgE, Filaggrin, TEWL, 가려움</p>
+      <p><b>검증</b>: 정답이 알려진 기전 시뮬레이션 데이터 5-fold 교차검증 평균 R² 0.79 · 95% 예측구간 포함률 90% / 전사체: 합성 데이터 DEG 정밀도 98.5% · 연구실 엑소좀 RNA-seq에서 기존 edgeR 결과와 순위상관 1.000 · 기존 DEG 89.7% 재현 · 방향 100% 일치</p>
+      <p class="hint">한계: 현재 예측 모델은 기전 가정으로 생성한 시뮬레이션 데이터로 학습되어 있으며, 후보물질 A~E는 시연용 가상 물질입니다. 데이터 허브에 실험·문헌 데이터를 넣을수록 실제 효능 예측으로 전환됩니다.</p>
+      <p class="hint">구현: 웹판(이 화면, HTML·JavaScript, 설치 불필요) · 연구판(Python·Streamlit, 동일 알고리즘). 버전 3.1 · 2026.11 · 개발 문경미</p></div>
+  </section>
+</main>
+<footer class="wrap">SkinAge-AI v3.1 · 개발 문경미 · 유전자세트: MSigDB KEGG v7.5.1·Hallmark v7.0, Enrichr GO BP 2021 (GSEApy 동봉본)</footer>
+<script src="js/stats.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/omics.js"></script>
+<script src="js/ai.js"></script>
+<script>
+"use strict";
+const App = {};
+App.dl = null;
+(async () => { try { if (window.claude && window.claude.use) App.dl = await window.claude.use("downloads"); } catch (e) { App.dl = null; } })();
+App.download = async (name, text, type) => {
+  const blob = new Blob([text], { type: type + ";charset=utf-8" });
+  if (App.dl) { try { await App.dl.save({ filename: name, data: blob }); return; } catch (e) { /* 사용자가 거절 */ return; } }
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { console.warn("download unsupported"); }
+};
+const started = {};
+function openMod(k) {
+  document.querySelectorAll(".mods button").forEach(b => b.setAttribute("aria-selected", b.dataset.mod === k));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + k));
+  if (k === "ai" && !started.ai) { started.ai = 1; AI.init(document.getElementById("v-ai")); }
+  if (k === "omics" && !started.omics) { started.omics = 1; Omics.init(document.getElementById("v-omics")); }
+  if ((k === "proto" || k === "pig") && !started[k]) { started[k] = 1; const f = document.querySelector("#v-" + k + " iframe"); f.src = f.dataset.src; }
+  if (location.hash !== "#" + k) history.replaceState(null, "", "#" + k);
+}
+document.querySelectorAll(".mods button").forEach(b => b.onclick = () => openMod(b.dataset.mod));
+const h = location.hash.slice(1); openMod(["ai", "omics", "proto", "pig", "about"].includes(h) ? h : "ai");
+</script>
+</body>
+</html>

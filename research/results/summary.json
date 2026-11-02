@@ -1,0 +1,78 @@
+{
+  "n_genes_tested": 11875,
+  "up": 170,
+  "down": 155,
+  "KEGG_Up_sig_terms": 40,
+  "KEGG_Up_top": [
+    "CELL CYCLE",
+    "BLADDER CANCER",
+    "PATHWAYS IN CANCER",
+    "TOLL LIKE RECEPTOR SIGNALING PATHWAY",
+    "PANCREATIC CANCER"
+  ],
+  "KEGG_Down_sig_terms": 9,
+  "KEGG_Down_top": [
+    "ECM RECEPTOR INTERACTION",
+    "FOCAL ADHESION",
+    "SMALL CELL LUNG CANCER",
+    "HYPERTROPHIC CARDIOMYOPATHY HCM",
+    "DILATED CARDIOMYOPATHY"
+  ],
+  "GO_BP_Up_sig_terms": 110,
+  "GO_BP_Up_top": [
+    "cytokine-mediated signaling pathway (GO:0019221)",
+    "cellular response to lipopolysaccharide (GO:0071222)",
+    "cellular response to molecule of bacterial origin (GO:0071219)",
+    "inflammatory response (GO:0006954)",
+    "regulation of DNA-templated transcription, initiation (GO:2000142)"
+  ],
+  "GO_BP_Down_sig_terms": 17,
+  "GO_BP_Down_top": [
+    "extracellular structure organization (GO:0043062)",
+    "external encapsulating structure organization (GO:0045229)",
+    "extracellular matrix organization (GO:0030198)",
+    "collagen fibril organization (GO:0030199)",
+    "glycosaminoglycan biosynthetic process (GO:0006024)"
+  ],
+  "Hallmark_Up_sig_terms": 15,
+  "Hallmark_Up_top": [
+    "HALLMARK INFLAMMATORY RESPONSE",
+    "HALLMARK INTERFERON GAMMA RESPONSE",
+    "HALLMARK TNFA SIGNALING VIA NFKB",
+    "HALLMARK ALLOGRAFT REJECTION",
+    "HALLMARK P53 PATHWAY"
+  ],
+  "Hallmark_Down_sig_terms": 9,
+  "Hallmark_Down_top": [
+    "HALLMARK OXIDATIVE PHOSPHORYLATION",
+    "HALLMARK EPITHELIAL MESENCHYMAL TRANSITION",
+    "HALLMARK UV RESPONSE DN",
+    "HALLMARK MYOGENESIS",
+    "HALLMARK GLYCOLYSIS"
+  ],
+  "compare": {
+    "n_common": 11875,
+    "pearson_lfc": 0.9224,
+    "spearman_lfc": 0.957,
+    "deg_a": 325,
+    "deg_b": 212,
+    "deg_both": 211,
+    "jaccard": 0.6472,
+    "direction_agreement": 1.0,
+    "recall_of_b": 0.9953,
+    "precision_vs_b": 0.6492,
+    "against": "Welch t-test"
+  },
+  "ai": {
+    "n_samples": 12,
+    "n_features": 260,
+    "loocv_accuracy": 1.0,
+    "loocv_auc": 1.0
+  },
+  "simulation_truth": {
+    "precision": 0.9846,
+    "recall_true_lfc_ge1": 0.7775,
+    "null_p_lt_0.05_rate": 0.0424,
+    "lfc_pearson_vs_truth_trueDEG": 0.9637
+  }
+}

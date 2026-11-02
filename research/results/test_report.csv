@@ -1,0 +1,29 @@
+test,pass,detail
+BH 보정 정확성,True,
+median-of-ratios 정규화 비례성,True,
+DEG[nb_wald] 정밀도 ≥ 0.9,True,precision=0.985
+DEG[nb_wald] 귀무 p<0.05 비율 ≤ 0.06,True,rate=0.0424
+"DEG[nb_wald] 방향 정확(MMP1↑, COL1A1↓)",True,
+DEG[welch] 정밀도 ≥ 0.9,True,precision=1.000
+DEG[welch] 귀무 p<0.05 비율 ≤ 0.06,True,rate=0.0461
+"DEG[welch] 방향 정확(MMP1↑, COL1A1↓)",True,
+입력 형식 인식: DESeq2,True,
+입력 형식 인식: edgeR,True,
+입력 형식 인식: limma,True,
+KEGG ORA: ECM-receptor interaction (Down) FDR<0.05,True,
+Hallmark ORA: INFLAMMATORY RESPONSE (Up) FDR<0.05,True,
+"비교 모듈 자기일치 (r=1, Jaccard=1)",True,
+AI LOOCV 정확도 ≥ 0.9,True,"acc=1.000, auc=1.000"
+AI 라벨 셔플 대조군 (정보누수 없음: 정확도 ≤ 0.75),True,"acc=0.083, auc=0.000"
+앱 실행: 데모 데이터,True,그림 10개 생성
+앱 실행: DEG 결과표 업로드,True,그림 5개 생성
+AI 예측 엔진 교차검증 평균 R² ≥ 0.6,True,mean R²=0.758
+예방률 예측이 정답과 같은 경향 (상관 ≥ 0.6),True,r=0.69
+4PL 적합 EC50 합리성 (5~20),True,EC50=9.72
+실데이터·문헌 양식 인식,True,
+통합 앱 실행: 🤖 SkinAge-AI · 예방효과 예측,True,"그림 6개, html 0개"
+통합 앱 실행: 🤖 SkinAge-AI · 예방효과 예측 / ,True,"그림 6개, html 0개"
+통합 앱 실행: 🧬 SkinAge-Omics · 전사체 분석 / 데모 데이터,True,"그림 9개, html 0개"
+통합 앱 실행: 🧫 SkinCell ProtoLab · Wet-lab,True,"그림 0개, html 1개"
+통합 앱 실행: 🎨 PigmentLab · 색소 분석,True,"그림 0개, html 1개"
+통합 앱 실행: ⓘ 플랫폼 소개,True,"그림 0개, html 0개"

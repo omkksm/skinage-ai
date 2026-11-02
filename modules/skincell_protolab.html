@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkinCell ProtoLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* 레이아웃: 상단 탭(프로토콜·계산기·실험실 구축) / 프로토콜은 좌측 단계 목록 + 우측 장면·절차 카드 */
+:root{
+  --bg:#f2f6f5; --card:#ffffff; --ink:#10201d; --sub:#5d6f6b; --line:#dbe5e2;
+  --accent:#0f766e; --accent-soft:#e0f2ef;
+  --s1:#0f766e; --s2:#c2780c; --s3:#6d4fc2; --s4:#3d5a80;
+  --warn:#b45309; --warn-bg:#fff7e8; --ok:#15803d; --bad:#b91c1c;
+  --dish:#eef4f3; --cell:#e7a6a1; --cell-old:#c9b38d;
+  --f-display:"IBM Plex Sans KR","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1716; --card:#15211f; --ink:#e4efec; --sub:#97aba6; --line:#26413c;
+  --accent:#3fc1b0; --accent-soft:#16312d; --s1:#3fc1b0; --s2:#e8a33d; --s3:#a58cf0; --s4:#7ea6d6;
+  --warn:#f0b35a; --warn-bg:#2b2112; --ok:#4ade80; --bad:#f87171; --dish:#1d2d2a; --cell:#c97d78; --cell-old:#a8946d;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e1716; --card:#15211f; --ink:#e4efec; --sub:#97aba6; --line:#26413c;
+  --accent:#3fc1b0; --accent-soft:#16312d; --s1:#3fc1b0; --s2:#e8a33d; --s3:#a58cf0; --s4:#7ea6d6;
+  --warn:#f0b35a; --warn-bg:#2b2112; --ok:#4ade80; --bad:#f87171; --dish:#1d2d2a; --cell:#c97d78; --cell-old:#a8946d;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);background:var(--card)}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:20px;letter-spacing:-.01em}
+.brand small{display:block;color:var(--sub);font-size:12.5px;font-family:var(--f-body);font-weight:400}
+.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--bg);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+main{padding:22px 0 60px}
+.view{display:none}.view.on{display:block}
+/* protocol */
+.proto{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start}
+.side{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.stage h4{font-size:12.5px;color:var(--c);text-transform:none;letter-spacing:.02em;margin:10px 6px 4px;display:flex;align-items:center;gap:6px}
+.stage h4::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.side button{display:flex;width:100%;gap:8px;align-items:baseline;text-align:left;border:0;background:none;padding:6px 8px;border-radius:7px;cursor:pointer;color:var(--ink);font-size:14px}
+.side button b{font-family:var(--f-mono);font-size:12px;color:var(--sub);min-width:20px}
+.side button.on{background:var(--accent-soft);font-weight:700}
+.side button.done b{color:var(--ok)}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin:4px 6px 10px}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.stepcard{padding:22px;display:grid;gap:18px}
+.stephead{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 10px;border-radius:999px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);font-weight:700}
+.stephead h2{font-size:24px}
+.meta{color:var(--sub);font-size:13.5px}
+.scene{background:var(--dish);border-radius:10px;border:1px solid var(--line);aspect-ratio:16/6;min-height:180px;overflow:hidden}
+.scene svg{width:100%;height:100%;display:block}
+.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+ol.steps{margin:0;padding-left:22px;display:grid;gap:7px}
+ol.steps li::marker{font-family:var(--f-mono);color:var(--accent);font-weight:500}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.box h3{font-size:14px;margin-bottom:6px}
+.caution{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.caution h3{color:var(--warn)}
+.box ul{margin:0;padding-left:18px;display:grid;gap:4px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:500;font-size:12.5px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono)}
+.tblwrap{overflow-x:auto}
+.nav{display:flex;justify-content:space-between;gap:10px}
+.btn{border:1px solid var(--line);background:var(--card);padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+label.chk{display:inline-flex;gap:8px;align-items:center;cursor:pointer;font-size:14px}
+/* calculators */
+.calcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.calc{padding:16px;display:grid;gap:10px;align-content:start}
+.calc h3{font-size:16px}
+.calc p.desc{margin:0;color:var(--sub);font-size:13px}
+.field{display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;font-size:13.5px}
+.field input,.field select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);font-family:var(--f-mono);font-size:13.5px;text-align:right}
+.field select{text-align:left;font-family:var(--f-body)}
+.out{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:14px}
+.out b{font-family:var(--f-mono);font-size:17px;color:var(--accent)}
+.ctinput{width:100%;font-family:var(--f-mono);font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg)}
+/* planner */
+.plan{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{padding:12px 14px}
+.tile .k{color:var(--sub);font-size:12.5px}
+.tile .v{font-family:var(--f-mono);font-size:22px;font-weight:500}
+.zone{margin-top:14px}
+.zone h3{font-size:15px;display:flex;align-items:center;gap:8px;margin:8px 0}
+.zone h3 span{font-size:12px;color:var(--sub);font-weight:400}
+.pill{font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+.pill.ess{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+.price{width:110px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-family:var(--f-mono);text-align:right}
+.qty{width:52px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-family:var(--f-mono);text-align:right}
+.ops h3{font-size:15px;margin:4px 0 6px}
+.ops ul{margin:0 0 10px;padding-left:18px}
+footer{color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);padding:16px 0 30px}
+@keyframes ray{0%{opacity:.15}50%{opacity:.9}100%{opacity:.15}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes drip{0%{transform:translateY(-30px);opacity:0}30%{opacity:1}100%{transform:translateY(40px);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes grow{from{stroke-dashoffset:600}to{stroke-dashoffset:0}}
+@keyframes fade{0%,100%{opacity:.35}50%{opacity:1}}
+.a-ray{animation:ray 1.6s ease-in-out infinite}
+.a-bob{animation:bob 2.4s ease-in-out infinite}
+.a-drip{animation:drip 1.8s ease-in infinite}
+.a-spin{animation:spin 2s linear infinite;transform-box:fill-box;transform-origin:center}
+.a-grow{stroke-dasharray:600;animation:grow 3s ease-out infinite}
+.a-fade{animation:fade 2.2s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:900px){.proto,.plan,.cols{grid-template-columns:1fr}.side{position:static;max-height:none}.tiles{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:480px){.field{grid-template-columns:1fr 110px}.tiles{grid-template-columns:1fr}.stephead h2{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="var(--accent)" stroke-width="2.5"/><circle cx="12" cy="14" r="3.2" fill="var(--cell)"/><circle cx="20" cy="12" r="2.6" fill="var(--cell)"/><circle cx="21" cy="21" r="3.6" fill="var(--cell-old)"/><circle cx="13" cy="22" r="2.4" fill="var(--cell)"/></svg>
+      <div><h1>SkinCell ProtoLab</h1><small>피부세포 노화연구 Wet-lab 가이드 · 프로토콜 · 계산기 · 실험실 구축</small></div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="화면 선택">
+      <button role="tab" id="t-proto" aria-selected="true" data-view="proto">프로토콜</button>
+      <button role="tab" id="t-calc" aria-selected="false" data-view="calc">계산기</button>
+      <button role="tab" id="t-plan" aria-selected="false" data-view="plan">실험실 구축·운영</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view on" id="v-proto" aria-labelledby="t-proto">
+    <div class="proto">
+      <aside class="side" id="side" aria-label="단계 목록"></aside>
+      <article class="card stepcard" id="step"></article>
+    </div>
+  </section>
+
+  <section class="view" id="v-calc" aria-labelledby="t-calc">
+    <div class="calcgrid" id="calcs"></div>
+  </section>
+
+  <section class="view" id="v-plan" aria-labelledby="t-plan">
+    <div class="plan">
+      <div>
+        <div class="tiles">
+          <div class="card tile"><div class="k">필수 장비 확보율</div><div class="v" id="pl-cov">0%</div></div>
+          <div class="card tile"><div class="k">구입 필요 품목</div><div class="v" id="pl-need">0</div></div>
+          <div class="card tile"><div class="k">입력한 예산 합계</div><div class="v" id="pl-sum">0원</div></div>
+        </div>
+        <p class="meta" style="margin:10px 0 0">보유 중인 장비는 체크하고, 구입할 장비는 수량과 견적 단가를 입력하면 예산이 합산됩니다. 단가는 견적서 기준으로 직접 입력하세요.</p>
+        <div id="zones"></div>
+      </div>
+      <div class="card" style="padding:16px;display:grid;gap:14px">
+        <h3 style="font-size:16px">실험실 구역 배치(예시)</h3>
+        <div id="layout"></div>
+        <div class="ops" id="ops"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  SkinCell ProtoLab v1.0 · 개발 문경미 · 2026.11 · 수치는 일반적인 출발 조건입니다. 세포주·장비·실험실 SOP에 맞춰 최적화해 사용하세요.
+  RNA-seq 데이터 분석은 SkinAge-Omics(전사체 분석 앱)와 연계됩니다.
+</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const fmt=(x,d=2)=>Number.isFinite(x)?x.toLocaleString("ko-KR",{maximumFractionDigits:d,minimumFractionDigits:0}):"–";
+const store={get(k,d){try{const v=localStorage.getItem("scpl-"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("scpl-"+k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------------------------------------------------------------- scenes */
+function cells(n,old,seed){let s="",r=seed||7;const rnd=()=>{r=(r*9301+49297)%233280;return r/233280};
+  for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,d=Math.sqrt(rnd())*78,x=200+Math.cos(a)*d*1.6,y=110+Math.sin(a)*d*.62,big=old&&rnd()<.55;
+    const rx=big?13:7+rnd()*3,ry=big?8:4+rnd()*2,rot=Math.round(rnd()*180);
+    s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot})"><ellipse rx="${rx}" ry="${ry}" fill="${big?"var(--cell-old)":"var(--cell)"}" opacity=".9"/><circle r="${big?3:2}" fill="#7a3d3a" opacity=".55"/></g>`}
+  return s}
+const dish=(inner,label)=>`<ellipse cx="200" cy="112" rx="150" ry="62" fill="var(--card)" stroke="var(--sub)" stroke-width="1.5"/><ellipse cx="200" cy="112" rx="140" ry="55" fill="#f6d9d4" opacity=".55"/>${inner}${label?`<text x="200" y="196" text-anchor="middle" font-size="12" fill="var(--sub)">${label}</text>`:""}`;
+function flask(fill){return `<g transform="translate(560 30)"><path d="M30 0h40v30l40 110a12 12 0 0 1-11 16H1a12 12 0 0 1-11-16L30 30z" fill="var(--card)" stroke="var(--sub)" stroke-width="1.5"/><path d="M8 96h84l12 42a8 8 0 0 1-7 10H3a8 8 0 0 1-7-10z" fill="${fill}" opacity=".85"/><rect x="26" y="-12" width="48" height="14" rx="3" fill="var(--accent)"/></g>`}
+function tube(x,y,fill,lab){return `<g transform="translate(${x} ${y})"><path d="M0 0h28v90a14 14 0 0 1-28 0z" fill="var(--card)" stroke="var(--sub)" stroke-width="1.4"/><path d="M1 50h26v40a13 13 0 0 1-26 0z" fill="${fill}"/><rect x="-3" y="-10" width="34" height="12" rx="3" fill="var(--s4)"/>${lab?`<text x="14" y="125" text-anchor="middle" font-size="11" fill="var(--sub)">${lab}</text>`:""}</g>`}
+function plate(colorFn,lab){let s=`<g transform="translate(470 40)"><rect width="250" height="150" rx="12" fill="var(--card)" stroke="var(--sub)" stroke-width="1.4"/>`;
+  for(let r=0;r<4;r++)for(let c=0;c<6;c++){s+=`<circle cx="${30+c*38}" cy="${30+r*31}" r="12" fill="${colorFn(r,c)}" stroke="var(--line)"/>`}
+  return s+(lab?`<text x="125" y="170" text-anchor="middle" font-size="11" fill="var(--sub)">${lab}</text>`:"")+"</g>"}
+const SCENES={
+  media:()=>dish(cells(26,false,3),"HDF · HaCaT · B16F10 · NHEM")+flask("#f2a7a0"),
+  thaw:()=>`<rect x="40" y="120" width="300" height="80" rx="8" fill="#9ccfe6" opacity=".55"/><text x="190" y="190" text-anchor="middle" font-size="12" fill="var(--sub)">37 °C water bath · 1–2분</text><g class="a-bob">${tube(160,40,"#d7c7ea","cryovial")}</g>`+`<path d="M330 90 L450 90" stroke="var(--sub)" stroke-dasharray="5 5"/><polygon points="450,84 462,90 450,96" fill="var(--sub)"/>`+tube(500,40,"#f2a7a0","9 mL 배지")+`<g transform="translate(640 60)" class="a-spin"><circle r="40" fill="none" stroke="var(--s4)" stroke-width="3"/><rect x="-6" y="-40" width="12" height="22" fill="var(--s4)"/></g><text x="640" y="125" text-anchor="middle" font-size="11" fill="var(--sub)">200–300 ×g</text>`,
+  trypsin:()=>dish(cells(34,false,11),"70–90% confluence → trypsin-EDTA")+`<g transform="translate(330 0)" class="a-drip"><path d="M0 20 q6 12 0 18 q-6 -6 0 -18z" fill="#f3d26b"/></g><g transform="translate(560 30)"><rect width="18" height="80" rx="4" fill="var(--sub)" opacity=".5"/><path d="M4 80h10l-3 40h-4z" fill="var(--sub)"/></g><text x="600" y="190" font-size="12" fill="var(--sub)">2–5분 · 37 °C</text>`,
+  count:()=>{let g=`<g transform="translate(460 22)"><rect width="200" height="170" fill="var(--card)" stroke="var(--sub)"/>`;for(let i=1;i<4;i++){g+=`<line x1="${i*50}" y1="0" x2="${i*50}" y2="170" stroke="var(--line)"/>`;} for(let i=1;i<4;i++){g+=`<line x1="0" y1="${i*42.5}" x2="200" y2="${i*42.5}" stroke="var(--line)"/>`;}
+    const pts=[[22,18,1],[70,30,1],[120,22,0],[160,60,1],[35,80,1],[95,95,1],[150,120,1],[60,140,0],[180,150,1],[20,150,1],[110,58,1]];
+    pts.forEach(([x,y,l])=>g+=`<circle cx="${x}" cy="${y}" r="6" fill="${l?"#f6efe2":"#3b5bb5"}" stroke="${l?"#8a7d68":"#22397a"}"/>`);
+    return dish(cells(20,false,5))+g+`</g><text x="560" y="214" text-anchor="middle" font-size="11" fill="var(--sub)">밝은 세포 = 생존 · 청색 = trypan blue 염색(사멸)</text>`},
+  freeze:()=>tube(120,40,"#d7c7ea","90% FBS + 10% DMSO")+`<g transform="translate(300 50)"><rect width="120" height="120" rx="14" fill="var(--card)" stroke="var(--sub)"/><text x="60" y="66" text-anchor="middle" font-size="12" fill="var(--sub)">−1 °C/분</text></g><g transform="translate(520 30)"><rect width="120" height="160" rx="16" fill="#cfe3f3" stroke="var(--sub)"/><text x="60" y="88" text-anchor="middle" font-size="13" fill="#24486b">LN₂</text><g class="a-fade"><circle cx="40" cy="20" r="5" fill="#fff"/><circle cx="70" cy="12" r="4" fill="#fff"/><circle cx="90" cy="24" r="3" fill="#fff"/></g></g>`,
+  seed:()=>plate((r,c)=>c<2?"#f6d9d4":c<4?"#f2b9b2":"#ec958c","plate format별 seeding")+dish(cells(16,false,9)),
+  uv:()=>{let rays="";for(let i=0;i<9;i++)rays+=`<line class="a-ray" style="animation-delay:${i*.15}s" x1="${110+i*24}" y1="34" x2="${100+i*26}" y2="78" stroke="#8a5cf6" stroke-width="3" stroke-linecap="round"/>`;
+    return `<rect x="80" y="10" width="240" height="22" rx="6" fill="var(--s3)"/><text x="200" y="26" text-anchor="middle" font-size="11" fill="#fff">UVB 램프 (280–315 nm)</text>`+rays+dish(cells(30,true,4),"뚜껑 제거 · 얇은 PBS 층")+`<g transform="translate(470 40)"><rect width="200" height="120" rx="10" fill="var(--card)" stroke="var(--sub)"/><text x="100" y="40" text-anchor="middle" font-size="12" fill="var(--sub)">조사 시간(s) =</text><text x="100" y="70" text-anchor="middle" font-size="15" font-family="var(--f-mono)" fill="var(--ink)">선량 ÷ 조도</text><text x="100" y="96" text-anchor="middle" font-size="11" fill="var(--sub)">mJ/cm² ÷ mW/cm²</text></g>`},
+  h2o2:()=>dish(cells(28,true,12),"H₂O₂ 처리 후 회복 → 편평·비대 세포")+`<g transform="translate(200 0)" class="a-drip"><path d="M0 20 q7 13 0 20 q-7 -7 0 -20z" fill="#7fb2e5"/></g>`+tube(520,40,"#cfe6f7","30% H₂O₂ → 작업액"),
+  pd:()=>{let s=`<g transform="translate(60 20)"><line x1="0" y1="170" x2="640" y2="170" stroke="var(--sub)"/><line x1="0" y1="0" x2="0" y2="170" stroke="var(--sub)"/>`;
+    s+=`<path class="a-grow" d="M0 165 C 120 120, 240 60, 360 35 S 560 20, 640 18" fill="none" stroke="var(--s2)" stroke-width="3"/>`;
+    s+=`<text x="320" y="190" text-anchor="middle" font-size="11" fill="var(--sub)">배양 일수 (계대 반복)</text><text x="-10" y="-6" font-size="11" fill="var(--sub)">누적 PD</text><text x="560" y="10" font-size="11" fill="var(--sub)">증식 정지(노화)</text></g>`;return s},
+  mtt:()=>plate((r,c)=>["#f4ecd2","#d9b6e6","#b98bd1","#9a63bf","#7d42a8","#6a2f96"][c],"MTT → 보라색 formazan · 570 nm"),
+  sagal:()=>{let s=dish(cells(30,true,21),"pH 6.0 · X-gal · 37 °C (CO₂ 없이)");s+=`<g class="a-fade">`;[[170,95],[230,120],[150,128],[260,96],[205,140]].forEach(([x,y])=>s+=`<ellipse cx="${x}" cy="${y}" rx="12" ry="7" fill="#2e5fb8" opacity=".75"/>`);return s+`</g>`+`<g transform="translate(480 50)"><rect width="190" height="110" rx="10" fill="var(--card)" stroke="var(--sub)"/><text x="95" y="42" text-anchor="middle" font-size="12" fill="var(--sub)">SA-β-gal 양성률</text><text x="95" y="78" text-anchor="middle" font-size="22" font-family="var(--f-mono)" fill="#2e5fb8">청색 / 전체</text></g>`},
+  ros:()=>dish(`<g class="a-fade">${cells(28,true,31).replace(/var\(--cell-old\)|var\(--cell\)/g,"#5fd38a")}</g>`,"H₂DCFDA → DCF 형광 (Ex 485 / Em 535)"),
+  qpcr:()=>{let s=`<g transform="translate(60 20)"><line x1="0" y1="170" x2="640" y2="170" stroke="var(--sub)"/><line x1="0" y1="0" x2="0" y2="170" stroke="var(--sub)"/><line x1="0" y1="110" x2="640" y2="110" stroke="var(--sub)" stroke-dasharray="4 4"/><text x="560" y="104" font-size="11" fill="var(--sub)">threshold</text>`;
+    [["var(--s2)",180],["var(--s3)",260],["var(--accent)",340]].forEach(([c,x0])=>{s+=`<path class="a-grow" d="M0 168 L${x0-80} 166 C ${x0} 160, ${x0+40} 40, ${x0+140} 22 L640 20" fill="none" stroke="${c}" stroke-width="2.6"/>`});
+    return s+`<text x="320" y="190" text-anchor="middle" font-size="11" fill="var(--sub)">Cycle → Ct · 2^−ΔΔCt</text></g>`},
+  blot:()=>{let s=`<g transform="translate(180 30)"><rect width="440" height="150" rx="8" fill="var(--card)" stroke="var(--sub)"/>`;const lanes=["Young","UVB","H₂O₂","+시료"];
+    const bands=[["p16",[.2,.9,.8,.4]],["p21",[.3,.8,.9,.45]],["Lamin B1",[.9,.35,.3,.7]],["GAPDH",[.8,.8,.8,.8]]];
+    lanes.forEach((l,i)=>s+=`<text x="${110+i*80}" y="18" text-anchor="middle" font-size="11" fill="var(--sub)">${l}</text>`);
+    bands.forEach(([n,v],j)=>{s+=`<text x="12" y="${48+j*30}" font-size="11" fill="var(--sub)">${n}</text>`;v.forEach((a,i)=>s+=`<rect x="${85+i*80}" y="${38+j*30}" width="50" height="10" rx="4" fill="#1e1e1e" opacity="${a}"/>`)});
+    return s+"</g>"},
+  report:()=>`<g transform="translate(90 26)"><rect width="250" height="160" rx="10" fill="var(--card)" stroke="var(--sub)"/>${[0,1,2,3].map(i=>`<rect x="${30+i*52}" y="${130-[40,95,80,55][i]}" width="34" height="${[40,95,80,55][i]}" fill="${["var(--s1)","var(--s3)","var(--s2)","var(--s4)"][i]}"/>`).join("")}<line x1="20" y1="130" x2="230" y2="130" stroke="var(--sub)"/></g><g transform="translate(420 26)"><rect width="250" height="160" rx="10" fill="var(--card)" stroke="var(--sub)"/>${Array.from({length:60},(_,i)=>{const x=20+((i*37)%210),y=20+((i*53)%120);const c=i%7===0?"#c8463d":i%5===0?"#2f6db5":"#bdbdbd";return `<circle cx="${x}" cy="${y}" r="3" fill="${c}"/>`}).join("")}<text x="125" y="152" text-anchor="middle" font-size="11" fill="var(--sub)">RNA-seq → SkinAge-Omics</text></g>`
+};
+const sceneSVG=k=>`<svg viewBox="0 0 760 220" role="img" aria-label="실험 장면 그림">${(SCENES[k]||SCENES.media)()}</svg>`;
+
+/* ---------------------------------------------------------------- protocol data */
+const STAGES=[
+ {name:"세포 준비",color:"var(--s1)",steps:[
+  {id:"media",title:"세포주 선택 · 배지 준비",time:"30분",scene:"media",
+   steps:["무균 작업대(BSC)를 켜고 15분 송풍한 뒤 작업면을 70% 에탄올로 닦습니다.","세포주에 맞는 완전배지를 만듭니다(아래 표). 500 mL 배지에 FBS 50 mL, P/S 5 mL를 넣으면 10% FBS · 1% P/S입니다.","배지는 37 °C로 데우되 수조에 30분 이상 두지 않습니다.","배양기는 37 °C, 5% CO₂, 가습 상태를 확인합니다."],
+   table:{head:["세포","유래·용도","배지"],rows:[["HDF (인간 진피 섬유아세포)","콜라겐·MMP, 광노화·세포노화","DMEM(high glucose) + 10% FBS + 1% P/S"],["HaCaT (각질형성세포)","표피 장벽, UVB 반응, 염증","DMEM + 10% FBS + 1% P/S"],["B16F10 (마우스 흑색종)","멜라닌 생성 스크리닝","DMEM + 10% FBS + 1% P/S"],["NHEM (인간 멜라닌세포)","색소침착 기전 검증","Medium 254 + HMGS"]]},
+   tips:["세포주별 권장 배지는 공급처 데이터시트를 우선합니다.","마이코플라스마 검사 기록이 있는 세포만 사용합니다."],
+   caution:["배지·FBS를 개봉하면 날짜와 이니셜을 적습니다.","BSC 안에서는 팔을 크게 움직이지 않습니다(기류 교란)."]},
+  {id:"thaw",title:"세포 해동",time:"20분",scene:"thaw",
+   steps:["동결 바이알을 37 °C 수조에서 1–2분 흔들며 녹입니다. 작은 얼음 조각이 남을 때 꺼냅니다.","바이알 외부를 70% 에탄올로 닦고 BSC로 옮깁니다.","미리 데운 완전배지 9 mL가 든 15 mL 튜브에 세포를 천천히 옮깁니다.","200–300 ×g에서 3–5분 원심분리해 DMSO가 든 상층액을 제거합니다.","새 배지에 재부유해 플라스크에 분주하고, 다음 날 배지를 교체합니다."],
+   tips:["해동은 빠르게, 동결은 천천히가 원칙입니다."],caution:["DMSO는 실온에서 세포 독성이 있으니 해동 후 바로 희석합니다.","LN₂ 바이알은 보안경과 장갑을 착용하고 다룹니다."]},
+  {id:"passage",title:"계대배양",time:"30분",scene:"trypsin",
+   steps:["세포가 70–90% 찼을 때 계대합니다. 섬유아세포는 100% 접촉 상태로 오래 두지 않습니다.","배지를 제거하고 Ca²⁺/Mg²⁺가 없는 PBS로 1회 세척합니다.","Trypsin-EDTA(0.05–0.25%)를 바닥이 덮일 만큼 넣고 37 °C에서 2–5분 둡니다.","현미경으로 세포가 둥글게 떨어진 것을 확인하고, 완전배지를 trypsin 부피의 2배 이상 넣어 중화합니다.","원심분리 후 재부유해 1:3–1:6으로 나눠 분주합니다. 계대 번호(P)를 플라스크에 적습니다."],
+   tips:["HDF 노화 실험은 계대 번호를 맞춘 세포(예: P5–P8)끼리 비교합니다."],caution:["Trypsin 과처리는 표면 단백질을 손상시켜 부착률을 떨어뜨립니다."]},
+  {id:"count",title:"세포 계수 (hemocytometer)",time:"10분",scene:"count",calc:"hemo",
+   steps:["세포 현탁액 10 µL와 0.4% trypan blue 10 µL를 섞습니다(희석배수 2).","혈구계수판 양쪽 챔버에 10 µL씩 넣습니다.","모서리 큰 사각형 4칸의 생존 세포(밝은 세포)와 사멸 세포(청색)를 셉니다.","세포 수/mL = 큰 사각형 1칸 평균 × 희석배수 × 10⁴ 으로 계산합니다."],
+   tips:["한 칸에 20–100개가 되도록 희석하면 오차가 줄어듭니다."],caution:["경계선에 걸친 세포는 위·왼쪽 선만 세는 식으로 규칙을 정합니다."]},
+  {id:"freeze",title:"동결 보존",time:"20분 + 하룻밤",scene:"freeze",
+   steps:["로그 증식기 세포를 회수해 계수합니다.","동결배지(90% FBS + 10% DMSO, 또는 상용 동결배지)에 1×10⁶ cells/mL로 재부유합니다.","크라이오바이알에 1 mL씩 분주하고 라벨(세포, P, 날짜, 이름)을 붙입니다.","−1 °C/분 냉동 용기에 넣어 −80 °C에서 하룻밤 둡니다.","다음 날 LN₂ 탱크로 옮기고 위치를 재고 대장에 기록합니다."],
+   tips:["세포주마다 마스터·워킹 뱅크를 나눠 보관합니다."],caution:["LN₂ 작업은 환기되는 곳에서, 산소 농도계를 둔 공간에서 합니다."]}
+ ]},
+ {name:"노화 모델 유도",color:"var(--s2)",steps:[
+  {id:"seed",title:"시딩 (plate format 별)",time:"20분 + 24시간",scene:"seed",calc:"seed",
+   steps:["실험 형식(96·24·12·6-well, 60·100 mm)과 목표 밀도(cells/cm²)를 정합니다.","계수 결과로 필요한 세포 수와 현탁액 부피를 계산합니다(아래 계산기).","플레이트를 앞뒤·좌우로 흔들어 고르게 펴고, 24시간 부착시킨 뒤 처리합니다."],
+   tips:["가장자리 well은 증발 효과가 크므로 PBS만 채우는 방법도 있습니다."],caution:["원형으로 돌리면 세포가 가운데로 몰립니다."]},
+  {id:"uvb",title:"UVB 광노화 모델",time:"30분",scene:"uv",calc:"uvb",
+   steps:["UVB 램프를 15분 예열하고, 라디오미터로 시료 위치에서 조도(mW/cm²)를 측정합니다.","배지를 제거하고 PBS로 세척한 뒤 얇은 PBS 층만 남깁니다(배지·페놀레드가 UV를 흡수).","뚜껑을 열고 목표 선량만큼 조사합니다. 조사 시간(s) = 선량(mJ/cm²) ÷ 조도(mW/cm²).","대조군은 같은 시간 동안 램프 밖에서 같은 조작을 합니다(sham).","새 배지(필요시 시료 포함)를 넣고 24–72시간 후 분석합니다."],
+   table:{head:["세포","흔히 쓰는 범위(출발점)"],rows:[["HDF","10–30 mJ/cm² (MMP-1↑, 콜라겐↓ 확인)"],["HaCaT","10–30 mJ/cm² (IL-6·염증, 생존율 확인)"]]},
+   tips:["선량-생존율 곡선(MTT)을 먼저 그려 생존율 70–80% 근처 조건을 고르면 기전 분석에 유리합니다."],caution:["UV 차단 보안경·피부 노출 차단을 반드시 합니다.","램프 출력은 사용 시간에 따라 떨어지므로 매번 측정합니다."]},
+  {id:"h2o2",title:"H₂O₂ 유도 조기노화 (SIPS)",time:"2시간 + 3–5일",scene:"h2o2",calc:"h2o2",
+   steps:["30% H₂O₂(약 9.8 M) 원액으로 사용 직전에 작업액을 만듭니다.","HDF에 100–200 µM H₂O₂를 2시간 처리합니다(세포·밀도에 따라 최적화).","PBS로 세척하고 완전배지로 3–5일 회복 배양합니다(조건에 따라 반복 처리).","편평하고 커진 세포 모양, SA-β-gal 양성, p16/p21 증가로 노화를 확인합니다."],
+   tips:["H₂O₂는 배지 성분과 반응하므로 처리 배지(무혈청/저혈청)를 매번 같게 합니다."],caution:["원액은 강산화제입니다. 보안경·장갑 착용, 갈색병 냉장 보관."]},
+  {id:"pd",title:"반복 계대 노화 (replicative)",time:"수 주",scene:"pd",calc:"pd",
+   steps:["계대할 때마다 접종 세포 수(Ns)와 회수 세포 수(Nh)를 기록합니다.","PD = log₂(Nh/Ns)를 누적해 누적 PD 곡선을 그립니다.","2주 이상 PD 증가가 거의 없으면 증식 정지(노화) 상태로 판단합니다.","젊은 세포(낮은 PD)와 노화 세포(높은 PD)를 같은 시점에 비교 실험합니다."],
+   tips:["공여자 나이가 다른 1차 세포(young/aged donor)를 함께 쓰면 내인성 노화 모델이 됩니다."],caution:["계대 간격·접종 밀도를 일정하게 유지해야 PD 비교가 의미 있습니다."]}
+ ]},
+ {name:"노화 평가",color:"var(--s3)",steps:[
+  {id:"mtt",title:"세포 생존율 (MTT)",time:"3–5시간",scene:"mtt",
+   steps:["96-well에서 처리가 끝나면 MTT를 최종 0.5 mg/mL로 넣습니다.","37 °C에서 2–4시간 반응시켜 formazan 결정을 만듭니다.","배지를 제거하고 DMSO 100 µL로 녹인 뒤 570 nm(참조 630–650 nm)에서 흡광도를 잽니다.","생존율(%) = (시료 − blank) ÷ (대조군 − blank) × 100."],
+   tips:["시료 자체 색이 있으면 세포 없는 시료 blank를 둡니다."],caution:["MTT는 빛에 약하므로 차광해 보관합니다."]},
+  {id:"sagal",title:"SA-β-gal 염색",time:"30분 + 12–16시간",scene:"sagal",calc:"sagal",
+   steps:["PBS로 세척하고 2% formaldehyde / 0.2% glutaraldehyde로 실온 3–5분 고정합니다.","PBS로 2회 세척합니다.","염색액을 넣습니다: X-gal 1 mg/mL, citric acid/sodium phosphate 40 mM (pH 6.0), K₄Fe(CN)₆ 5 mM, K₃Fe(CN)₆ 5 mM, NaCl 150 mM, MgCl₂ 2 mM.","37 °C, CO₂ 없는 인큐베이터에서 12–16시간 반응합니다(CO₂는 pH를 낮춤).","무작위 5개 이상 시야에서 총 300개 이상 세포를 세어 청색 세포 비율(%)을 구합니다."],
+   tips:["pH 6.0이 핵심입니다. pH 4 염색은 리소좀 β-gal 전체를 보여 노화 특이성이 없습니다."],caution:["Glutaraldehyde는 흄후드에서 다룹니다."]},
+  {id:"ros",title:"세포 내 ROS (H₂DCFDA)",time:"1시간",scene:"ros",
+   steps:["처리 후 세포를 무혈청·무페놀레드 배지 또는 HBSS로 세척합니다.","H₂DCFDA 10–20 µM을 37 °C 암조건에서 30분 처리합니다.","세척 후 형광(Ex 485 / Em 535 nm)을 플레이트 리더나 형광현미경으로 측정합니다.","세포 수(단백량 또는 핵 염색)로 보정합니다."],
+   tips:["양성 대조군으로 H₂O₂ 처리 well을 둡니다."],caution:["프로브는 빛·공기 산화에 약하므로 사용 직전에 희석합니다."]},
+  {id:"qpcr",title:"노화 마커 qPCR",time:"반나절",scene:"qpcr",calc:"ddct",
+   steps:["RNA 추출 후 A260/280 1.8–2.1을 확인하고 동일량(예: 1 µg)으로 cDNA를 합성합니다.","표적: MMP1, COL1A1, CDKN2A(p16), CDKN1A(p21), IL6 / 참조: GAPDH, ACTB.","기술 반복 3회, 생물학적 반복 3회 이상으로 진행합니다.","ΔCt = Ct(표적) − Ct(참조), ΔΔCt = ΔCt(처리) − 평균 ΔCt(대조), 상대발현 = 2^−ΔΔCt."],
+   tips:["프라이머 효율(90–110%)과 melt curve 단일 피크를 먼저 확인합니다."],caution:["NTC(주형 없음) well을 꼭 둡니다."]},
+  {id:"protein",title:"단백질 · 분비 인자",time:"1–2일",scene:"blot",
+   steps:["Western blot: p16, p21, p53 증가, Lamin B1 감소로 세포노화를 확인합니다.","배양 상층액 ELISA: MMP-1 증가, procollagen type I C-peptide(PIP) 감소로 광노화를 확인합니다.","단백량(BCA)으로 정규화하고 대조군 대비 배수로 표시합니다."],
+   tips:["Western blot 세부 절차는 ProtoLab Western blot 가이드와 연계해 사용합니다."],caution:["상층액은 동일 세포수·동일 배양시간 조건에서 회수합니다."]}
+ ]},
+ {name:"데이터 · 기록",color:"var(--s4)",steps:[
+  {id:"report",title:"데이터 분석 · 연구노트",time:"–",scene:"report",
+   steps:["생물학적 반복(n ≥ 3)을 기준으로 평균 ± SD를 표시합니다.","두 군은 t-test, 세 군 이상은 one-way ANOVA + 사후검정을 씁니다.","RNA-seq을 수행했다면 SkinAge-Omics로 DEG, 피부노화 유전자 패널, GO·KEGG, AI 노화점수를 분석합니다.","원자료(이미지, 플레이트 리더 파일, Ct 값)와 조건(계대 번호, 선량, 농도)을 연구노트에 함께 남깁니다."],
+   tips:["실험 조건표 하나에 세포·P·밀도·처리·시간을 모두 적어 두면 재현이 쉬워집니다."],caution:["대표 이미지만이 아니라 정량 데이터 전체를 보관합니다."]}
+ ]}
+];
+const FLAT=[];STAGES.forEach((s,si)=>s.steps.forEach(st=>FLAT.push({...st,stage:si})));
+let cur=Math.min(store.get("cur",0),FLAT.length-1);
+const done=new Set(store.get("done",[]));
+
+function renderSide(){
+  let h=`<div class="meta" style="padding:2px 6px">진행 ${done.size} / ${FLAT.length} 단계</div><div class="prog"><i style="width:${done.size/FLAT.length*100}%"></i></div>`;
+  let idx=0;
+  STAGES.forEach(s=>{h+=`<div class="stage" style="--c:${s.color}"><h4>${s.name}</h4>`;
+    s.steps.forEach(st=>{const i=idx++;h+=`<button data-go="${i}" class="${i===cur?"on":""} ${done.has(st.id)?"done":""}"><b>${done.has(st.id)?"✓":String(i+1).padStart(2,"0")}</b><span>${st.title}</span></button>`});
+    h+=`</div>`});
+  $("#side").innerHTML=h;
+}
+function list(arr){return `<ul>${arr.map(x=>`<li>${x}</li>`).join("")}</ul>`}
+function renderStep(){
+  const st=FLAT[cur],sg=STAGES[st.stage];
+  let h=`<div class="stephead"><span class="chip" style="--c:${sg.color}">${sg.name} · ${cur+1}/${FLAT.length}</span><h2>${st.title}</h2><span class="meta">소요 ${st.time}</span></div>`;
+  h+=`<div class="scene">${sceneSVG(st.scene)}</div>`;
+  h+=`<div class="cols"><div><h3 style="font-size:15px;margin-bottom:8px">절차</h3><ol class="steps">${st.steps.map(x=>`<li>${x}</li>`).join("")}</ol></div><div style="display:grid;gap:12px;align-content:start">`;
+  if(st.tips)h+=`<div class="box"><h3>팁</h3>${list(st.tips)}</div>`;
+  if(st.caution)h+=`<div class="box caution"><h3>주의</h3>${list(st.caution)}</div>`;
+  h+=`</div></div>`;
+  if(st.table)h+=`<div class="tblwrap"><table><thead><tr>${st.table.head.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${st.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  if(st.calc)h+=`<div class="card calc" id="inline-calc" style="background:var(--bg)"></div>`;
+  h+=`<div class="nav"><button class="btn" id="prev" ${cur===0?"disabled":""}>← 이전</button><label class="chk"><input type="checkbox" id="chkdone" ${done.has(st.id)?"checked":""}> 이 단계 완료</label><button class="btn primary" id="next" ${cur===FLAT.length-1?"disabled":""}>다음 →</button></div>`;
+  $("#step").innerHTML=h;
+  if(st.calc)mountCalc(CALCS[st.calc],$("#inline-calc"),"in-");
+  $("#prev").onclick=()=>go(cur-1);$("#next").onclick=()=>go(cur+1);
+  $("#chkdone").onchange=e=>{e.target.checked?done.add(st.id):done.delete(st.id);store.set("done",[...done]);renderSide()};
+}
+function go(i){cur=Math.max(0,Math.min(FLAT.length-1,i));store.set("cur",cur);renderSide();renderStep();if(window.innerWidth<900)$("#step").scrollIntoView({behavior:"smooth"})}
+$("#side").addEventListener("click",e=>{const b=e.target.closest("button[data-go]");if(b)go(+b.dataset.go)});
+
+/* ---------------------------------------------------------------- calculators */
+const AREA={"96-well (0.32 cm²)":0.32,"48-well (0.95 cm²)":0.95,"24-well (1.9 cm²)":1.9,"12-well (3.8 cm²)":3.8,"6-well (9.6 cm²)":9.6,"35 mm dish (9.6 cm²)":9.6,"60 mm dish (21 cm²)":21,"100 mm dish (55 cm²)":55,"T25 (25 cm²)":25,"T75 (75 cm²)":75};
+const CALCS={
+ hemo:{title:"혈구계수판 세포 수",desc:"큰 사각형 4칸 평균으로 계산합니다.",fields:[["live","생존 세포 수 (4칸 합)",180],["dead","사멸 세포 수 (4칸 합)",12],["squares","센 큰 사각형 수",4],["dil","희석배수 (trypan blue 1:1 = 2)",2],["vol","현탁액 총 부피 (mL)",5]],
+  calc:v=>{const per=v.live/v.squares*v.dil*1e4,tot=per*v.vol,via=v.live/(v.live+v.dead)*100;return `생존 세포 <b>${fmt(per/1e4,2)}×10⁴</b> cells/mL · 총 <b>${fmt(tot/1e6,2)}×10⁶</b> cells · 생존율 <b>${fmt(via,1)}%</b>`}},
+ seed:{title:"시딩 계산기",desc:"목표 밀도 × 배양 면적 × well 수 (+10% 여유분).",fields:[["fmt","배양 형식",Object.keys(AREA)[4],Object.keys(AREA)],["dens","목표 밀도 (cells/cm²)",10000],["n","well(접시) 수",6],["stock","현탁액 농도 (cells/mL)",500000],["med","well당 배지 (mL)",2]],
+  calc:v=>{const a=AREA[v.fmt],per=v.dens*a,tot=per*v.n*1.1,vol=tot/v.stock,mv=v.med*v.n*1.1;return `well당 <b>${fmt(per,0)}</b> cells · 현탁액 <b>${fmt(vol*1000,0)} µL</b> + 배지 <b>${fmt(Math.max(mv-vol,0),2)} mL</b> 섞어 well당 ${v.med} mL 분주`}},
+ c1v1:{title:"희석 (C₁V₁ = C₂V₂)",desc:"원액 농도와 목표 농도·부피로 필요한 원액량을 구합니다. 단위는 같게 입력하세요.",fields:[["c1","원액 농도",10],["c2","목표 농도",0.1],["v2","최종 부피 (mL)",10]],
+  calc:v=>{const v1=v.c2*v.v2/v.c1;return v1>v.v2?`목표 농도가 원액보다 높습니다. 값을 확인하세요.`:`원액 <b>${fmt(v1*1000,2)} µL</b> + 희석액 <b>${fmt(v.v2-v1,3)} mL</b>`}},
+ uvb:{title:"UVB 조사 시간",desc:"시료 위치에서 측정한 조도를 입력하세요.",fields:[["dose","목표 선량 (mJ/cm²)",20],["irr","측정 조도 (mW/cm²)",0.5]],
+  calc:v=>{const s=v.dose/v.irr;return `조사 시간 <b>${fmt(s,1)} 초</b> (${Math.floor(s/60)}분 ${fmt(s%60,0)}초)`}},
+ h2o2:{title:"H₂O₂ 작업액",desc:"30% H₂O₂ ≈ 9.8 M. 중간 희석(100 mM)을 먼저 만든 뒤 처리 농도로 희석합니다.",fields:[["target","처리 농도 (µM)",200],["vol","처리 배지 총량 (mL)",20],["stockM","원액 농도 (M)",9.8]],
+  calc:v=>{const inter=0.1, s1=inter*1/v.stockM*1000, s2=v.target*1e-6*v.vol/inter*1000;return `① 100 mM 중간액 1 mL: 원액 <b>${fmt(s1,1)} µL</b> + 증류수 ${fmt(1000-s1,1)} µL<br>② 처리액: 중간액 <b>${fmt(s2,1)} µL</b> + 배지 ${fmt(v.vol-s2/1000,3)} mL`}},
+ pd:{title:"집단배가수 (PD)",desc:"PD = log₂(회수 세포 수 ÷ 접종 세포 수).",fields:[["ns","접종 세포 수",200000],["nh","회수 세포 수",780000],["prev","이전 누적 PD",32.5]],
+  calc:v=>{const pd=Math.log2(v.nh/v.ns);return `이번 계대 PD <b>${fmt(pd,2)}</b> · 누적 PD <b>${fmt(v.prev+pd,2)}</b>`}},
+ sagal:{title:"SA-β-gal 양성률",desc:"시야별 합계를 입력하세요.",fields:[["blue","청색(양성) 세포 수",84],["total","전체 세포 수",312]],
+  calc:v=>{const p=v.blue/v.total*100;return `양성률 <b>${fmt(p,1)}%</b>${v.total<300?" · 300개 이상 세는 것을 권장합니다":""}`}},
+ mtt:{title:"MTT 생존율",desc:"흡광도 평균값으로 계산합니다.",fields:[["blank","blank (세포 없음)",0.05],["ctrl","대조군",1.20],["smp","시료",0.86]],
+  calc:v=>`생존율 <b>${fmt((v.smp-v.blank)/(v.ctrl-v.blank)*100,1)}%</b>`},
+ media:{title:"완전배지 조성",desc:"FBS·항생제 비율로 첨가량을 계산합니다.",fields:[["vol","최종 부피 (mL)",500],["fbs","FBS (%)",10],["ps","Penicillin-Streptomycin (%)",1]],
+  calc:v=>{const f=v.vol*v.fbs/100,p=v.vol*v.ps/100;return `기본 배지 <b>${fmt(v.vol-f-p,1)} mL</b> + FBS <b>${fmt(f,1)} mL</b> + P/S <b>${fmt(p,1)} mL</b>`}},
+ ddct:{title:"qPCR 상대발현 (2^−ΔΔCt)",type:"ddct",desc:"한 줄에 'Ct표적, Ct참조' 형식으로 생물학적 반복을 입력합니다."}
+};
+function mountCalc(c,el,pfx){
+  if(c.type==="ddct"){
+    el.innerHTML=`<h3>${c.title}</h3><p class="desc">${c.desc}</p>
+     <label class="meta" for="${pfx}ctl">대조군 (예: Young)</label><textarea class="ctinput" id="${pfx}ctl" rows="3">24.1, 17.9
+24.4, 18.1
+23.9, 17.8</textarea>
+     <label class="meta" for="${pfx}trt">처리군 (예: UVB 20 mJ/cm²)</label><textarea class="ctinput" id="${pfx}trt" rows="3">22.0, 18.0
+22.3, 18.2
+21.8, 17.9</textarea><div class="out" id="${pfx}o"></div><div id="${pfx}ch"></div>`;
+    const parse=t=>t.split(/\n/).map(l=>l.split(/[,\s\t]+/).filter(Boolean).map(Number)).filter(r=>r.length>=2&&r.every(Number.isFinite));
+    const upd=()=>{const a=parse($("#"+pfx+"ctl").value),b=parse($("#"+pfx+"trt").value);
+      if(!a.length||!b.length){$("#"+pfx+"o").innerHTML="Ct 값을 두 개씩 입력하세요.";return}
+      const dA=a.map(r=>r[0]-r[1]),m=dA.reduce((s,x)=>s+x,0)/dA.length;
+      const fc=g=>g.map(r=>2**-((r[0]-r[1])-m));const fa=fc(a),fb=fc(b);
+      const mean=x=>x.reduce((s,y)=>s+y,0)/x.length,sd=x=>{const mm=mean(x);return Math.sqrt(x.reduce((s,y)=>s+(y-mm)**2,0)/Math.max(x.length-1,1))};
+      $("#"+pfx+"o").innerHTML=`처리군 상대발현 <b>${fmt(mean(fb),2)}배</b> (SD ${fmt(sd(fb),2)}) · 대조군 ${fmt(mean(fa),2)} (SD ${fmt(sd(fa),2)})`;
+      const mx=Math.max(mean(fa)+sd(fa),mean(fb)+sd(fb),1)*1.2,H=120,bar=(x,v,s,col,lab)=>{const h=v/mx*H,e=s/mx*H;return `<rect x="${x}" y="${H-h+10}" width="60" height="${h}" rx="4" fill="${col}"/><line x1="${x+30}" y1="${H-h-e+10}" x2="${x+30}" y2="${H-h+e+10}" stroke="var(--ink)"/><line x1="${x+20}" y1="${H-h-e+10}" x2="${x+40}" y2="${H-h-e+10}" stroke="var(--ink)"/><text x="${x+30}" y="${H+26}" text-anchor="middle" font-size="11" fill="var(--sub)">${lab}</text><text x="${x+30}" y="${H-h+4}" text-anchor="middle" font-size="11" fill="var(--ink)">${fmt(v,2)}</text>`};
+      $("#"+pfx+"ch").innerHTML=`<svg viewBox="0 0 260 ${H+34}" style="width:100%;max-width:320px"><line x1="40" y1="${H+10}" x2="240" y2="${H+10}" stroke="var(--sub)"/>${bar(60,mean(fa),sd(fa),"var(--s1)","대조군")}${bar(160,mean(fb),sd(fb),"var(--s3)","처리군")}</svg>`};
+    el.querySelectorAll("textarea").forEach(t=>t.addEventListener("input",upd));upd();return}
+  let h=`<h3>${c.title}</h3><p class="desc">${c.desc}</p>`;
+  c.fields.forEach(([k,lab,def,opts])=>{h+=`<div class="field"><label for="${pfx}${k}">${lab}</label>`+(opts?`<select id="${pfx}${k}">${opts.map(o=>`<option ${o===def?"selected":""}>${o}</option>`).join("")}</select>`:`<input id="${pfx}${k}" type="number" step="any" value="${def}">`)+`</div>`});
+  h+=`<div class="out" id="${pfx}out" aria-live="polite"></div>`;el.innerHTML=h;
+  const upd=()=>{const v={};c.fields.forEach(([k,,,opts])=>{const e=$("#"+pfx+k);v[k]=opts?e.value:parseFloat(e.value)});
+    const bad=c.fields.some(([k,,,o])=>!o&&!(Number.isFinite(v[k])&&v[k]>=0));$("#"+pfx+"out").innerHTML=bad?"0 이상의 숫자를 입력하세요.":c.calc(v)};
+  el.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",upd));upd();
+}
+(function(){const g=$("#calcs");["hemo","seed","media","c1v1","uvb","h2o2","pd","mtt","sagal","ddct"].forEach(k=>{const d=document.createElement("div");d.className="card calc";g.appendChild(d);mountCalc(CALCS[k],d,"c-"+k+"-")})})();
+
+/* ---------------------------------------------------------------- planner */
+const ZONES=[
+ {z:"무균 배양 구역",d:"세포 취급 · 클린 동선",items:[["Class II 생물안전작업대(BSC)",1,1],["CO₂ 인큐베이터 (가습형)",2,1],["도립 위상차 현미경",1,1],["37 °C 수조 / 비드 배스",1,1],["벤치형 원심분리기 (15·50 mL)",1,1],["전동 피펫 컨트롤러",2,1],["마이크로피펫 세트 (P2–P1000)",2,1],["세포 계수기 또는 혈구계수판",1,1],["CO₂ 가스 실린더 + 자동 절체기",2,0]]},
+ {z:"분석 구역",d:"평가 · 측정",items:[["멀티모드 플레이트 리더 (흡광·형광)",1,1],["형광 현미경 + 카메라",1,0],["Real-time PCR 장비",1,1],["UVB 조사기 + UV 라디오미터",1,1],["Western blot 전기영동·전이 장치",1,1],["화학발광 이미저",1,0],["마이크로 원심분리기 (냉장)",1,1],["분광광도계 (RNA 정량)",1,1]]},
+ {z:"저장 구역",d:"시료 · 시약 보관",items:[["−80 °C 초저온 냉동고",1,1],["LN₂ 저장 탱크",1,1],["4 °C 냉장고 / −20 °C 냉동고",1,1],["산소 농도계 (LN₂ 구역)",1,1]]},
+ {z:"세척 · 멸균 · 안전",d:"폐기물 · 안전",items:[["고압멸균기 (autoclave)",1,1],["초순수 제조기",1,1],["흄후드",1,1],["의료·생물 폐기물 보관함",2,1],["아이워시 · 비상샤워 · 소화기",1,1]]}
+];
+const pstate=store.get("plan",{});
+function renderPlan(){
+  let h="",ess=0,essHave=0,need=0,sum=0;
+  ZONES.forEach((z,zi)=>{h+=`<div class="zone card" style="padding:12px 14px"><h3>${z.z}<span>${z.d}</span></h3><div class="tblwrap"><table><thead><tr><th>보유</th><th>장비</th><th>구분</th><th class="num">수량</th><th class="num">견적 단가(원)</th></tr></thead><tbody>`;
+    z.items.forEach(([n,q,e],ii)=>{const k=zi+"-"+ii,s=pstate[k]||{have:false,qty:q,price:""};if(e){ess++;if(s.have)essHave++}if(!s.have){need++;sum+=(parseFloat(s.price)||0)*(parseFloat(s.qty)||0)}
+      h+=`<tr><td><input type="checkbox" aria-label="${n} 보유" data-k="${k}" data-f="have" ${s.have?"checked":""}></td><td>${n}</td><td><span class="pill ${e?"ess":""}">${e?"필수":"권장"}</span></td><td class="num"><input class="qty" type="number" min="0" aria-label="${n} 수량" data-k="${k}" data-f="qty" value="${s.qty}"></td><td class="num"><input class="price" type="number" min="0" step="10000" placeholder="견적 입력" aria-label="${n} 단가" data-k="${k}" data-f="price" value="${s.price}" ${s.have?"disabled":""}></td></tr>`});
+    h+=`</tbody></table></div></div>`});
+  $("#zones").innerHTML=h;$("#pl-cov").textContent=Math.round(essHave/ess*100)+"%";$("#pl-need").textContent=need;$("#pl-sum").textContent=sum.toLocaleString("ko-KR")+"원";
+}
+$("#zones").addEventListener("change",e=>{const t=e.target;if(!t.dataset.k)return;const s=pstate[t.dataset.k]||{have:false,qty:t.closest("tr").querySelector(".qty").value,price:""};
+  s[t.dataset.f]=t.type==="checkbox"?t.checked:t.value;pstate[t.dataset.k]=s;store.set("plan",pstate);renderPlan()});
+$("#layout").innerHTML=`<svg viewBox="0 0 340 250" role="img" aria-label="실험실 구역 배치 예시" style="width:100%">
+<rect x="4" y="4" width="332" height="242" rx="8" fill="var(--bg)" stroke="var(--sub)"/>
+<rect x="14" y="14" width="150" height="120" rx="6" fill="color-mix(in srgb,var(--s1) 16%,transparent)" stroke="var(--s1)"/><text x="89" y="34" text-anchor="middle" font-size="11" fill="var(--s1)" font-weight="700">무균 배양실</text>
+<rect x="24" y="44" width="60" height="28" rx="3" fill="var(--card)" stroke="var(--sub)"/><text x="54" y="62" text-anchor="middle" font-size="9" fill="var(--ink)">BSC</text>
+<rect x="94" y="44" width="60" height="28" rx="3" fill="var(--card)" stroke="var(--sub)"/><text x="124" y="62" text-anchor="middle" font-size="9" fill="var(--ink)">인큐베이터</text>
+<rect x="24" y="82" width="60" height="28" rx="3" fill="var(--card)" stroke="var(--sub)"/><text x="54" y="100" text-anchor="middle" font-size="9" fill="var(--ink)">현미경</text>
+<rect x="94" y="82" width="60" height="28" rx="3" fill="var(--card)" stroke="var(--sub)"/><text x="124" y="100" text-anchor="middle" font-size="9" fill="var(--ink)">원심·수조</text>
+<rect x="176" y="14" width="150" height="120" rx="6" fill="color-mix(in srgb,var(--s3) 16%,transparent)" stroke="var(--s3)"/><text x="251" y="34" text-anchor="middle" font-size="11" fill="var(--s3)" font-weight="700">분석실</text>
+<text x="251" y="60" text-anchor="middle" font-size="9" fill="var(--ink)">플레이트 리더 · qPCR</text><text x="251" y="80" text-anchor="middle" font-size="9" fill="var(--ink)">UVB 조사기(차광)</text><text x="251" y="100" text-anchor="middle" font-size="9" fill="var(--ink)">전기영동 · 이미저</text>
+<rect x="14" y="146" width="150" height="90" rx="6" fill="color-mix(in srgb,var(--s4) 16%,transparent)" stroke="var(--s4)"/><text x="89" y="166" text-anchor="middle" font-size="11" fill="var(--s4)" font-weight="700">저장</text><text x="89" y="190" text-anchor="middle" font-size="9" fill="var(--ink)">−80 °C · 냉장/냉동</text><text x="89" y="208" text-anchor="middle" font-size="9" fill="var(--ink)">LN₂ (환기·O₂ 센서)</text>
+<rect x="176" y="146" width="150" height="90" rx="6" fill="color-mix(in srgb,var(--s2) 16%,transparent)" stroke="var(--s2)"/><text x="251" y="166" text-anchor="middle" font-size="11" fill="var(--s2)" font-weight="700">세척·멸균·안전</text><text x="251" y="190" text-anchor="middle" font-size="9" fill="var(--ink)">고압멸균기 · 초순수</text><text x="251" y="208" text-anchor="middle" font-size="9" fill="var(--ink)">흄후드 · 폐기물</text>
+<path d="M164 74 L176 74" stroke="var(--sub)" stroke-dasharray="3 3"/></svg>
+<p class="meta" style="margin:4px 0 0">원칙: 무균 구역은 출입이 적은 안쪽에, 오염 동선(폐기물·멸균)과 분리합니다.</p>`;
+$("#ops").innerHTML=`<h3>운영 체크리스트</h3>
+<div class="meta" style="font-weight:700">매일</div><ul><li>인큐베이터 온도·CO₂ 표시값 기록</li><li>BSC 사용 전후 70% 에탄올 소독</li><li>−80 °C 온도 기록</li></ul>
+<div class="meta" style="font-weight:700">매주</div><ul><li>인큐베이터 가습 트레이 물 교체</li><li>LN₂ 잔량 확인·보충</li><li>생물 폐기물 고압멸균 후 처리</li></ul>
+<div class="meta" style="font-weight:700">매월 · 정기</div><ul><li>배양 세포 마이코플라스마 검사</li><li>피펫 보정, BSC 필터·풍속 정기 점검</li><li>UVB 램프 출력 측정 기록</li></ul>
+<div class="meta" style="font-weight:700">구축 시</div><ul><li>기관생물안전위원회(IBC) 승인, 연구시설 신고(해당 시)</li><li>연구실 안전교육, 시약 MSDS 비치</li><li>세포주 반입 기록(출처·인증서)과 세포 뱅크 대장</li></ul>`;
+
+/* ---------------------------------------------------------------- tabs */
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+b.dataset.view));
+  if(location.hash!=="#"+b.dataset.view)history.replaceState(null,"","#"+b.dataset.view)});
+function fromHash(){const h=location.hash.slice(1);const b=document.querySelector(`.tabs button[data-view="${h}"]`);if(b)b.click()}
+window.addEventListener("hashchange",fromHash);
+renderSide();renderStep();renderPlan();fromHash();
+</script>
+</body>
+</html>
